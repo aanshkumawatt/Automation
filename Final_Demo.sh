@@ -17,7 +17,7 @@ export ANDROID_HOME="/home/ansh/Android/Sdk"
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
 DEVICE_ID="emulator-5554"
 
-# Initialize tracking
+# Initialize tracking demo
 STEP_COUNTER=0
 START_TIME=$(date)
 TEST_RESULTS=()
