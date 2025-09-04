@@ -13,6 +13,8 @@ import sys
 import subprocess
 import re
 import time
+import random
+import string
 from datetime import datetime
 from playwright.async_api import async_playwright
 try:
@@ -48,6 +50,61 @@ def print_success(message):
 
 def print_fail(message):
     print(f"{Colors.RED}[FAIL]{Colors.NC} {message}")
+
+def generate_unique_customer_group_name():
+    """Generate a unique customer group name with 8-9 characters"""
+    # Generate a random length between 8 and 9
+    length = random.randint(8, 9)
+    
+    # Create a prefix for better readability
+    prefix = "Loyalty"
+    
+    # Generate random characters for the remaining length
+    remaining_length = length - len(prefix)
+    if remaining_length > 0:
+        # Use uppercase letters and numbers for uniqueness
+        random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=remaining_length))
+        unique_name = f"{prefix}{random_chars}"
+    else:
+        unique_name = prefix
+    
+    # Add timestamp suffix for additional uniqueness
+    timestamp = datetime.now().strftime("%H%M%S")
+    unique_name = f"{unique_name}_{timestamp}"
+    
+    return unique_name
+
+def generate_unique_mobile_number():
+    """Generate a unique 10-digit mobile number"""
+    # Start with a valid mobile prefix (e.g., 5, 6, 7, 8, 9)
+    valid_prefixes = ['5', '6', '7', '8', '9']
+    prefix = random.choice(valid_prefixes)
+    
+    # Generate remaining 9 digits randomly
+    remaining_digits = ''.join(random.choices(string.digits, k=9))
+    
+    # Combine prefix with remaining digits
+    mobile_number = f"{prefix}{remaining_digits}"
+    
+    # Add timestamp suffix for additional uniqueness (optional, can be removed if you want exactly 10 digits)
+    timestamp = datetime.now().strftime("%H%M")
+    unique_mobile = f"{mobile_number}_{timestamp}"
+    
+    return unique_mobile
+
+def generate_unique_customer_name():
+    """Generate a unique customer name"""
+    # Create a prefix for better readability
+    prefix = "Customer"
+    
+    # Generate random characters for uniqueness
+    random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    
+    # Add timestamp suffix for additional uniqueness
+    timestamp = datetime.now().strftime("%H%M%S")
+    unique_customer_name = f"{prefix}{random_chars}_{timestamp}"
+    
+    return unique_customer_name
 
 # ============================================================================
 # WEB AUTOMATION FUNCTIONS
@@ -261,8 +318,9 @@ async def run_web_automation():
                 return False
             
             await name_field.click()
-            await name_field.fill('LoyaltyQAA')
-            print_success("Customer Group Name filled with 'LoyaltyQAA'")
+            unique_name = generate_unique_customer_group_name()
+            await name_field.fill(unique_name)
+            print_success(f"Customer Group Name filled with unique name: '{unique_name}'")
             
             # Select Status dropdown - "Active"
             print_status("Selecting Status dropdown...")
@@ -676,8 +734,8 @@ async def run_web_automation():
                 return False
             
             await group_name_field.click()
-            await group_name_field.fill('LoyaltyQAA')
-            print_success("Configuration Group Name filled with 'LoyaltyQAA'")
+            await group_name_field.fill(unique_name)
+            print_success(f"Configuration Group Name filled with unique name: '{unique_name}'")
             
             # Use Tab navigation to move to next fields
             print_status("Using Tab navigation to fill remaining fields...")
@@ -725,27 +783,27 @@ async def run_web_automation():
                 await customer_group_dropdown.click()
                 await page.wait_for_timeout(1000)
                 
-                # Look for "LoyaltyQAA" option
-                LoyaltyQAA_selectors = [
-                    'li:has-text("LoyaltyQAA")', '.select2-results__option:has-text("LoyaltyQAA")',
-                    '[data-select2-id*="LoyaltyQAA" i]', 'li[title="LoyaltyQAA"]'
+                # Look for the unique name option
+                unique_name_selectors = [
+                    f'li:has-text("{unique_name}")', f'.select2-results__option:has-text("{unique_name}")',
+                    f'[data-select2-id*="{unique_name}" i]', f'li[title="{unique_name}"]'
                 ]
                 
-                LoyaltyQAA_option = None
-                for selector in LoyaltyQAA_selectors:
+                unique_name_option = None
+                for selector in unique_name_selectors:
                     try:
                         await page.wait_for_selector(selector, state='visible', timeout=2000)
-                        LoyaltyQAA_option = await page.query_selector(selector)
-                        if LoyaltyQAA_option:
+                        unique_name_option = await page.query_selector(selector)
+                        if unique_name_option:
                             break
                     except:
                         continue
                 
-                if LoyaltyQAA_option:
-                    await LoyaltyQAA_option.click()
-                    print_success("Selected 'LoyaltyQAA' from Customer Group dropdown")
+                if unique_name_option:
+                    await unique_name_option.click()
+                    print_success(f"Selected '{unique_name}' from Customer Group dropdown")
                 else:
-                    print_warning("LoyaltyQAA option not found, continuing...")
+                    print_warning(f"'{unique_name}' option not found, continuing...")
             else:
                 print_warning("Customer Group dropdown not found, continuing...")
             
@@ -859,17 +917,19 @@ async def run_web_automation():
                 return False
             
             await mobile_field.click()
-            await mobile_field.fill('5665098765')
-            print_success("Customer Mobile Number filled with '5665098765'")
+            unique_mobile = generate_unique_mobile_number()
+            await mobile_field.fill(unique_mobile)
+            print_success(f"Customer Mobile Number filled with unique mobile: '{unique_mobile}'")
             
             # Use Tab navigation to move to next fields
             print_status("Using Tab navigation to fill remaining fields...")
             
-            # Press Tab to move to next field and type "LoyaltyQAA"
+            # Press Tab to move to next field and type unique customer name
             await page.keyboard.press('Tab')
             await page.wait_for_timeout(500)
-            await page.keyboard.type('LoyaltyQAA')
-            print_success("Customer Name field filled with 'LoyaltyQAA'")
+            unique_customer_name = generate_unique_customer_name()
+            await page.keyboard.type(unique_customer_name)
+            print_success(f"Customer Name field filled with unique customer name: '{unique_customer_name}'")
             
             # Press Tab to move to next field and type "Ecosmob"
             await page.keyboard.press('Tab')
@@ -906,11 +966,67 @@ async def run_web_automation():
             await customer_group_dropdown.click()
             print_success("Customer Group dropdown clicked")
             
-            # Wait for dropdown to open and type "LoyaltyQAA"
+            # Wait for dropdown to open and search for the unique customer group
             await page.wait_for_timeout(1000)
-            await page.keyboard.type('LoyaltyQAA')
-            await page.keyboard.press('Enter')
-            print_success("Customer Group 'LoyaltyQAA' selected")
+            
+            # Look for the search field within the dropdown
+            search_field_selectors = [
+                '.select2-search__field',
+                'input[type="search"]',
+                '.select2-search input',
+                'input[placeholder*="search" i]'
+            ]
+            
+            search_field = None
+            for selector in search_field_selectors:
+                try:
+                    await page.wait_for_selector(selector, state='visible', timeout=2000)
+                    search_field = await page.query_selector(selector)
+                    if search_field:
+                        break
+                except:
+                    continue
+            
+            if search_field:
+                # Type the unique name in the search field
+                await search_field.fill(unique_name)
+                print_success(f"Typed '{unique_name}' in search field")
+                
+                # Wait for search results to appear
+                await page.wait_for_timeout(1000)
+                
+                # Look for the specific option with the unique name
+                option_selectors = [
+                    f'li:has-text("{unique_name}")',
+                    f'.select2-results__option:has-text("{unique_name}")',
+                    f'[data-select2-id*="{unique_name}" i]',
+                    f'li[title="{unique_name}"]',
+                    f'.select2-results li:has-text("{unique_name}")'
+                ]
+                
+                option_found = False
+                for selector in option_selectors:
+                    try:
+                        await page.wait_for_selector(selector, state='visible', timeout=2000)
+                        option_element = await page.query_selector(selector)
+                        if option_element:
+                            await option_element.click()
+                            print_success(f"Selected '{unique_name}' from dropdown options")
+                            option_found = True
+                            break
+                    except:
+                        continue
+                
+                if not option_found:
+                    # Fallback: try pressing Enter after typing
+                    await page.keyboard.press('Enter')
+                    print_success(f"Used fallback method to select '{unique_name}'")
+            else:
+                # Fallback: use keyboard navigation if search field not found
+                await page.keyboard.type(unique_name)
+                await page.wait_for_timeout(1000)
+                await page.keyboard.press('Enter')
+                print_success(f"Used keyboard navigation to select '{unique_name}'")
             
             # Wait for selection to be applied
             await page.wait_for_timeout(2000)
@@ -922,10 +1038,11 @@ async def run_web_automation():
                 await page.wait_for_timeout(300)
                 print_status(f"Tab {i+1}/3 pressed")
             
-            # Type "8006008009"
-            print_status("Typing '8006008009' in additional phone field...")
-            await page.keyboard.type('8006008009')
-            print_success("Additional phone field filled with '8006008009'")
+            # Type unique additional phone number
+            print_status("Typing unique additional phone number...")
+            unique_additional_mobile = generate_unique_mobile_number()
+            await page.keyboard.type(unique_additional_mobile)
+            print_success(f"Additional phone field filled with unique mobile: '{unique_additional_mobile}'")
             
             # Press Tab to move to address field
             print_status("Pressing Tab to move to address field...")
@@ -1017,7 +1134,7 @@ async def run_web_automation():
             
             # Check device connection
             if check_device():
-                mobile_success = run_mobile_automation()
+                mobile_success = run_mobile_automation(unique_mobile)
                 if mobile_success:
                     print_success("🎉 Mobile automation completed successfully!")
                 else:
@@ -1097,13 +1214,13 @@ async def run_web_automation():
             await customer_member_dropdown.click()
             print_success("Customer Member dropdown clicked")
             
-            # Wait for dropdown to open and type "LoyaltyQAA"
+            # Wait for dropdown to open and type unique name
             await page.wait_for_timeout(1000)
-            await page.keyboard.type('LoyaltyQAA')
+            await page.keyboard.type(unique_name)
             # Wait 2 seconds after typing before pressing Enter
             await page.wait_for_timeout(2000)
             await page.keyboard.press('Enter')
-            print_success("Customer Member 'LoyaltyQAA' selected")
+            print_success(f"Customer Member '{unique_name}' selected")
             
             # Wait for selection to be applied
             await page.wait_for_timeout(2000)
@@ -1400,8 +1517,8 @@ async def run_web_automation():
             await member_id_dropdown.click()
             print_success("Customer Member ID dropdown clicked")
             
-            # Type "LoyaltyQAA" in the search field (updated from "Eco_User")
-            print_status("Typing 'LoyaltyQAA' in search field...")
+            # Type unique name in the search field
+            print_status(f"Typing unique name '{unique_name}' in search field...")
             search_selectors = [
                 '.select2-search__field',
                 'input[type="search"]',
@@ -1422,8 +1539,8 @@ async def run_web_automation():
                 print_error("Search field not found")
                 return False
             
-            await search_field.fill('LoyaltyQAA')
-            print_success("'LoyaltyQAA' typed in search field")
+            await search_field.fill(unique_name)
+            print_success(f"'{unique_name}' typed in search field")
             
             # Wait 2 seconds
             await page.wait_for_timeout(2000)
@@ -1470,10 +1587,12 @@ async def run_web_automation():
             await page.keyboard.press('Tab')
             print_success("Tab key pressed")
             
-            # Type "8006008009@ybl" (updated from "7425972890@ybl")
-            print_status("Typing '8006008009@ybl'...")
-            await page.keyboard.type('8006008009@ybl')
-            print_success("'8006008009@ybl' typed")
+            # Type unique UPI ID with unique mobile number
+            print_status("Typing unique UPI ID...")
+            unique_upi_mobile = generate_unique_mobile_number()
+            unique_upi_id = f"{unique_upi_mobile}@ybl"
+            await page.keyboard.type(unique_upi_id)
+            print_success(f"'{unique_upi_id}' typed")
             
             # Press Tab
             await page.keyboard.press('Tab')
@@ -1742,10 +1861,12 @@ def clear_input_field():
         print(f"❌ Error clearing input field: {e}")
         return False
 
-def enter_phone_number():
-    """Enter phone number"""
-    phone_number = "5665098765"
-    print(f"📞 Entering phone number: {phone_number}")
+def enter_phone_number(unique_mobile_number):
+    """Enter phone number using the unique mobile number from web automation"""
+    # Remove timestamp suffix if present to get clean 10-digit number
+    clean_phone = unique_mobile_number.split('_')[0] if '_' in unique_mobile_number else unique_mobile_number
+    
+    print(f"📞 Entering unique phone number: {clean_phone}")
     
     # Click phone number field
     if click_at_position(331, 1672, "Phone number field"):
@@ -1753,9 +1874,9 @@ def enter_phone_number():
         time.sleep(2)
         
         # Enter phone number
-        subprocess.run(['adb', 'shell', 'input', 'text', phone_number])
+        subprocess.run(['adb', 'shell', 'input', 'text', clean_phone])
         time.sleep(2)
-        print("✅ Phone number entered!")
+        print("✅ Unique phone number entered!")
         return True
     return False
 
@@ -1934,8 +2055,8 @@ def extract_and_fill_otp():
         print(f"❌ Failed to fill OTP '{otp}' in input field")
         return False
 
-def run_mobile_automation():
-    """Run mobile automation with OTP capture"""
+def run_mobile_automation(unique_mobile_number):
+    """Run mobile automation with OTP capture using unique mobile number"""
     print_header("Starting Mobile Automation with OTP Capture")
     
     # Step 1: Launch app
@@ -1947,8 +2068,8 @@ def run_mobile_automation():
     time.sleep(3)
     
     # Step 2: Enter phone number
-    print_status("Step 2: Entering phone number...")
-    if not enter_phone_number():
+    print_status("Step 2: Entering unique phone number...")
+    if not enter_phone_number(unique_mobile_number):
         print_error("Phone number input failed")
         return False
     
@@ -2050,13 +2171,13 @@ async def run_kyc_web_automation():
         await customer_member_dropdown.click()
         print_success("Customer Member dropdown clicked")
         
-        # Wait for dropdown to open and type "LoyaltyQAAA"
+        # Wait for dropdown to open and type unique name
         await page.wait_for_timeout(1000)
-        await page.keyboard.type('LoyaltyQAAA')
+        await page.keyboard.type(unique_name)
         # Wait 2 seconds after typing before pressing Enter
         await page.wait_for_timeout(2000)
         await page.keyboard.press('Enter')
-        print_success("Customer Member 'LoyaltyQAAA' selected")
+        print_success(f"Customer Member '{unique_name}' selected")
         
         # Wait for selection to be applied
         await page.wait_for_timeout(2000)
