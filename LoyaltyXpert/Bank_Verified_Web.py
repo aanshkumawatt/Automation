@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 """
 Bank_Verified_Web.py
 Web Automation for Bank Verification
